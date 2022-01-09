@@ -16,5 +16,8 @@
         <file>icons/app.ico</file>
         <file>icons/about.ico</file>
         <file>icons/icons8-search-32.png</file>
+        <file>icons/icons8-go-to-end-32.png</file>
+        <file>icons/icons8-go-to-start-32.png</file>
+        <file>icons/icons8-running-32.png</file>
     </qresource>
 </RCC>

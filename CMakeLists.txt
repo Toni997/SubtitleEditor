@@ -28,6 +28,9 @@ set(PROJECT_SOURCES
         finddialog.ui
         direction.h
         direction.cpp
+        gotodialog.h
+        gotodialog.cpp
+        gotodialog.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

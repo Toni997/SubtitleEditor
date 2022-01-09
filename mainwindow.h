@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QCoreApplication>
 #include <QString>
+#include <QStringList>
 #include <QFileDialog>
 #include <QFile>
 #include <QCloseEvent>
@@ -15,6 +16,7 @@
 #include "direction.h"
 #include "aboutdialog.h"
 #include "finddialog.h"
+#include "gotodialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,6 +32,7 @@ public:
 
 public slots:
     void findCalled(QString& find, bool shouldMatchCase, bool shouldWrapAround, EDirection direction);
+    void goToRowCalled(int rowNumber);
 
 private slots:
     void on_actionOpen_triggered();
@@ -64,10 +67,18 @@ private slots:
 
     void on_actionFind_triggered();
 
+    void on_actionFirst_Row_triggered();
+    void on_actionLast_Row_triggered();
+    void on_actionExact_Row_triggered();
+
 private:
     Ui::MainWindow *ui;
 
     const QString APP_NAME = "Subtitle Editor";
+
+    const QString SRT = "srt";
+    const QString SUB = "sub";
+    const QStringList SUPPORTED_FORMATS = (QStringList() << SRT);
 
     QStandardItemModel m_model;
     bool m_changed;
@@ -79,6 +90,7 @@ private:
     void updateSubtitleStart();
     void updateSubtitleEnd();
     void surroundSelectedTextWithElement(const QString& atStart, const QString& atEnd);
+    void selectRow(int rowNumber);
 
     void newFile();
     void openFile();

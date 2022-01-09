@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(QIcon(":/icons/icons/app.ico"));
     setWindowTitle(QCoreApplication::applicationName());
 
+    ui->toolBar->setFloatable(true);
+
     init();
 }
 
@@ -20,9 +22,27 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::init()
+{
+    m_path.clear();
+    m_changed = false;
+
+    QStringList list;
+    list.append("Start");
+    list.append("End");
+    list.append("Content");
+    m_model.setHorizontalHeaderLabels(list);
+
+    ui->tblSubtitlesView->setModel(&m_model);
+    //ui->tblSubtitlesView->sete
+
+    connect(&m_model, &QStandardItemModel::itemChanged, this, &MainWindow::itemChanged);
+
+    newFile();
+}
+
 void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrapAround, EDirection direction)
 {
-    qInfo() << "called with " << find;
     int searchFromRow = 0;
 
     if(ui->tblSubtitlesView->selectionModel()->hasSelection())
@@ -69,9 +89,7 @@ void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrap
 
     if (isFound)
     {
-        ui->tblSubtitlesView->selectRow(foundAtRow);
-        auto modelIndex = ui->tblSubtitlesView->currentIndex();
-        emit ui->tblSubtitlesView->clicked(modelIndex);
+        selectRow(foundAtRow);
     }
     else
     {
@@ -79,22 +97,14 @@ void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrap
     }
 }
 
-void MainWindow::init()
+void MainWindow::goToRowCalled(int rowNumber)
 {
-    m_path.clear();
-    m_changed = false;
-
-    QStringList list;
-    list.append("Start");
-    list.append("End");
-    list.append("Content");
-    m_model.setHorizontalHeaderLabels(list);
-
-    ui->tblSubtitlesView->setModel(&m_model);
-
-    connect(&m_model, &QStandardItemModel::itemChanged, this, &MainWindow::itemChanged);
-
-    newFile();
+    if (rowNumber >= m_model.rowCount() || rowNumber < 0)
+    {
+        QMessageBox::information(this, "Error", "Couldn't find that row.");
+        return;
+    }
+    selectRow(rowNumber);
 }
 
 void MainWindow::clearAllInputs()
@@ -170,13 +180,13 @@ void MainWindow::on_txtSubtitleEdit_textChanged()
     if (ui->tblSubtitlesView->selectionModel()->hasSelection())
     {
         auto newContent = ui->txtSubtitleEdit->toPlainText();
-        qInfo() << newContent;
 
         auto modelIndex = ui->tblSubtitlesView->selectionModel()->currentIndex();
         if(!modelIndex.isValid()) return;
 
         m_model.item(modelIndex.row(), 2)->setText(newContent);
-        ui->txtSubtitlePreview->setHtml(newContent);
+
+        ui->txtSubtitlePreview->setHtml(newContent.replace('\n', "<br />"));
     }
 }
 
@@ -197,6 +207,20 @@ void MainWindow::openFile()
 {
     QString path = QFileDialog::getOpenFileName(this, "Open Subtitle", "", "*.srt");
     if (path.isEmpty()) return;
+
+    QFileInfo fileInfo(path);
+
+    if (!SUPPORTED_FORMATS.contains(fileInfo.suffix()))
+    {
+        QMessageBox::critical(this, "Error", "File format not supported.");
+        return;
+    }
+
+    if (!fileInfo.isReadable() || !fileInfo.isWritable())
+    {
+        QMessageBox::critical(this, "Error", "File is either not readable or not writable.");
+        return;
+    }
 
     QFile file(path);
     if(!file.open(QIODevice::ReadOnly))
@@ -259,11 +283,13 @@ void MainWindow::openFile()
         readAtLeastOneCorrectSubtitle = true;
     }
 
-    if(!readAtLeastOneCorrectSubtitle) return;
+    if(!readAtLeastOneCorrectSubtitle)
+    {
+        QMessageBox::critical(this, "Error", "Could not read that file properly.");
+        return;
+    }
 
-    ui->tblSubtitlesView->selectRow(0);
-    auto modelIndex = ui->tblSubtitlesView->selectionModel()->currentIndex();
-    emit ui->tblSubtitlesView->clicked(modelIndex);
+    selectRow(0);
 
     m_path = file.fileName();
     m_changed = false;
@@ -366,6 +392,14 @@ void MainWindow::surroundSelectedTextWithElement(const QString& atStart, const Q
     ui->txtSubtitleEdit->setTextCursor(textCursor);
 }
 
+void MainWindow::selectRow(int rowNumber)
+{
+    ui->tblSubtitlesView->selectRow(rowNumber);
+    auto modelIndex = ui->tblSubtitlesView->currentIndex();
+    emit ui->tblSubtitlesView->clicked(modelIndex);
+
+}
+
 void MainWindow::itemChanged(QStandardItem *item)
 {
     m_changed = true;
@@ -393,7 +427,7 @@ void MainWindow::on_tblSubtitlesView_clicked(const QModelIndex &index)
     ui->sbEndMilliseconds->setValue(subtitleEnd.right(3).toInt());
 
     ui->txtSubtitleEdit->setPlainText(itemContent->text());
-    ui->txtSubtitlePreview->setHtml(itemContent->text());
+    ui->txtSubtitlePreview->setHtml(itemContent->text().replace('\n', "<br />"));
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -502,11 +536,8 @@ void MainWindow::on_actionZoom_out_triggered()
 
 void MainWindow::on_actionFind_triggered()
 {
-    qInfo() << this->children().length();
-
     auto findDialogClassName = QString(FindDialog::staticMetaObject.className());
     auto findDialogFound = this->findChild<FindDialog*>(findDialogClassName);
-    qInfo() << findDialogFound;
     if (findDialogFound) findDialogFound->reject();
 
     FindDialog* findDialog = new FindDialog(this);
@@ -522,6 +553,37 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::on_actionExit_triggered()
 {
-    checkSave();
     close();
 }
+
+void MainWindow::on_actionFirst_Row_triggered()
+{
+    if (m_model.rowCount() < 1)
+    {
+        QMessageBox::information(this, "Error", "Your project doesn't have any subtitles yet. Get to work.");
+        return;
+    }
+    selectRow(0);
+}
+
+void MainWindow::on_actionLast_Row_triggered()
+{
+    if (m_model.rowCount() < 1)
+    {
+        QMessageBox::information(this, "Error", "Your project doesn't have any subtitles yet. Get to work.");
+        return;
+    }
+    selectRow(m_model.rowCount() - 1);
+}
+
+void MainWindow::on_actionExact_Row_triggered()
+{
+    auto goToDialogClassName = QString(GoToDialog::staticMetaObject.className());
+    auto goToDialogFound = this->findChild<GoToDialog*>(goToDialogClassName);
+    if (goToDialogFound) goToDialogFound->reject();
+
+    GoToDialog* goToDialog = new GoToDialog(this);
+
+    goToDialog->show();
+}
+
