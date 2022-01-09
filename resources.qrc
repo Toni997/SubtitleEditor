@@ -15,5 +15,6 @@
         <file>icons/icons8-edit-row-32.png</file>
         <file>icons/app.ico</file>
         <file>icons/about.ico</file>
+        <file>icons/icons8-search-32.png</file>
     </qresource>
 </RCC>

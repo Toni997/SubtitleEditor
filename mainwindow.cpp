@@ -20,6 +20,65 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrapAround, EDirection direction)
+{
+    qInfo() << "called with " << find;
+    int searchFromRow = 0;
+
+    if(ui->tblSubtitlesView->selectionModel()->hasSelection())
+    {
+        auto currentIndex = ui->tblSubtitlesView->currentIndex();
+        searchFromRow = currentIndex.row();
+        direction == EDirection::Down ? searchFromRow++ : searchFromRow--;
+    }
+
+    int foundAtRow = 0;
+    bool isFound = false;
+
+    int rowCount = m_model.rowCount();
+    for(int r = searchFromRow; r < rowCount && r >= 0; direction == EDirection::Down ? r++ : r--)
+    {
+        auto item = m_model.item(r, 2);
+        auto subtitleContent = item->text();
+        if (shouldWrapAround)
+        {
+            if (!shouldMatchCase)
+            {
+                subtitleContent = subtitleContent.toLower();
+                find = find.toLower();
+            }
+
+            QRegularExpression wrapAroundRegex(QString("\\b%0\\b").arg(find));
+            if (subtitleContent.contains(wrapAroundRegex))
+            {
+                foundAtRow = r;
+                isFound = true;
+                break;
+            }
+        }
+        else
+        {
+            if (subtitleContent.contains(find, shouldMatchCase ? Qt::CaseSensitive : Qt::CaseInsensitive))
+            {
+                foundAtRow = r;
+                isFound = true;
+                break;
+            };
+        }
+    }
+
+    if (isFound)
+    {
+        ui->tblSubtitlesView->selectRow(foundAtRow);
+        auto modelIndex = ui->tblSubtitlesView->currentIndex();
+        emit ui->tblSubtitlesView->clicked(modelIndex);
+    }
+    else
+    {
+        QMessageBox::information(this, "Not Found", QString("Cannot find \"%0\"").arg(find));
+    }
+}
+
 void MainWindow::init()
 {
     m_path.clear();
@@ -168,9 +227,12 @@ void MainWindow::openFile()
         line = stream.readLine();
         if(!line.contains("-->")) continue;
 
-        // put start and end time into a list
+        // put start and end time into a list and check them
         QStringList subtitleStartAndEnd = line.split(" --> ");
-        if(subtitleStartAndEnd.at(0).length() != 12 || subtitleStartAndEnd.at(1).length() != 12) continue;
+        QRegularExpression timeStampRegex("^[0-9][0-9]:[0-9][0-9]:[0-9][0-9],[0-9][0-9][0-9]$");
+        if(!subtitleStartAndEnd.at(0).contains(timeStampRegex) ||
+           !subtitleStartAndEnd.at(1).contains(timeStampRegex))
+                continue;
 
         // read actual subtitle
         QString subtitleContent;
@@ -337,8 +399,6 @@ void MainWindow::on_tblSubtitlesView_clicked(const QModelIndex &index)
 void MainWindow::on_actionAbout_triggered()
 {
     AboutDialog* aboutDialog = new AboutDialog(this);
-    aboutDialog->setWindowTitle("About");
-    aboutDialog->setWindowIcon(QIcon(":/icons/icons/about.ico"));
     aboutDialog->exec();
 }
 
@@ -431,13 +491,27 @@ void MainWindow::on_sbEndHours_valueChanged(int arg1)
 void MainWindow::on_actionZoom_in_triggered()
 {
     ui->txtSubtitleEdit->zoomIn(3);
-     ui->txtSubtitlePreview->zoomIn(3);
+    ui->txtSubtitlePreview->zoomIn(3);
 }
 
 void MainWindow::on_actionZoom_out_triggered()
 {
     ui->txtSubtitleEdit->zoomOut(3);
     ui->txtSubtitlePreview->zoomOut(3);
+}
+
+void MainWindow::on_actionFind_triggered()
+{
+    qInfo() << this->children().length();
+
+    auto findDialogClassName = QString(FindDialog::staticMetaObject.className());
+    auto findDialogFound = this->findChild<FindDialog*>(findDialogClassName);
+    qInfo() << findDialogFound;
+    if (findDialogFound) findDialogFound->reject();
+
+    FindDialog* findDialog = new FindDialog(this);
+
+    findDialog->show();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

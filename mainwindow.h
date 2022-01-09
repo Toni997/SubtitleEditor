@@ -11,10 +11,10 @@
 #include <QMessageBox>
 #include <QStandardItem>
 #include <QStandardItemModel>
-#include <QTextDocument>
-#include <QLabel>
-#include <QFont>
+#include <QRegularExpression>
+#include "direction.h"
 #include "aboutdialog.h"
+#include "finddialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,6 +27,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+public slots:
+    void findCalled(QString& find, bool shouldMatchCase, bool shouldWrapAround, EDirection direction);
 
 private slots:
     void on_actionOpen_triggered();
@@ -58,6 +61,8 @@ private slots:
     void on_sbEndHours_valueChanged(int arg1);
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
+
+    void on_actionFind_triggered();
 
 private:
     Ui::MainWindow *ui;
