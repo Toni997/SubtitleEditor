@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/icons8-add-row-32.png</file>
+        <file>icons/icons8-bold-32.png</file>
+        <file>icons/icons8-cancel-32.png</file>
+        <file>icons/icons8-italic-32.png</file>
+        <file>icons/icons8-new-file-32.png</file>
+        <file>icons/icons8-opened-folder-32.png</file>
+        <file>icons/icons8-save-32.png</file>
+        <file>icons/icons8-save-as-32.png</file>
+        <file>icons/icons8-underline-32.png</file>
+        <file>icons/icons8-zoom-in-32.png</file>
+        <file>icons/icons8-zoom-out-32.png</file>
+        <file>icons/icons8-delete-row-32.png</file>
+        <file>icons/icons8-edit-row-32.png</file>
+        <file>icons/app.ico</file>
+        <file>icons/about.ico</file>
+    </qresource>
+</RCC>
