@@ -8,6 +8,7 @@
 #include <QStringList>
 #include <QFileDialog>
 #include <QFile>
+#include <QColorDialog>
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QStandardItem>
@@ -71,6 +72,10 @@ private slots:
     void on_actionLast_Row_triggered();
     void on_actionExact_Row_triggered();
 
+    void on_actionColor_triggered();
+
+    void on_txtSubtitleEdit_modificationChanged(bool arg1);
+
 private:
     Ui::MainWindow *ui;
 
@@ -91,6 +96,7 @@ private:
     void updateSubtitleEnd();
     void surroundSelectedTextWithElement(const QString& atStart, const QString& atEnd);
     void selectRow(int rowNumber);
+    bool isAnyRowSelected();
 
     void newFile();
     void openFile();

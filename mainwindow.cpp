@@ -34,7 +34,6 @@ void MainWindow::init()
     m_model.setHorizontalHeaderLabels(list);
 
     ui->tblSubtitlesView->setModel(&m_model);
-    //ui->tblSubtitlesView->sete
 
     connect(&m_model, &QStandardItemModel::itemChanged, this, &MainWindow::itemChanged);
 
@@ -45,7 +44,7 @@ void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrap
 {
     int searchFromRow = 0;
 
-    if(ui->tblSubtitlesView->selectionModel()->hasSelection())
+    if (isAnyRowSelected())
     {
         auto currentIndex = ui->tblSubtitlesView->currentIndex();
         searchFromRow = currentIndex.row();
@@ -56,7 +55,7 @@ void MainWindow::findCalled(QString& find, bool shouldMatchCase, bool shouldWrap
     bool isFound = false;
 
     int rowCount = m_model.rowCount();
-    for(int r = searchFromRow; r < rowCount && r >= 0; direction == EDirection::Down ? r++ : r--)
+    for (int r = searchFromRow; r < rowCount && r >= 0; direction == EDirection::Down ? r++ : r--)
     {
         auto item = m_model.item(r, 2);
         auto subtitleContent = item->text();
@@ -123,7 +122,7 @@ void MainWindow::clearAllInputs()
 
 void MainWindow::updateSubtitleStart()
 {
-    if(!ui->tblSubtitlesView->selectionModel()->hasSelection()) return;
+    if (!isAnyRowSelected()) return;
 
     QString newSubtitleStart;
     auto startHours = QString::number(ui->sbStartHours->value()).rightJustified(2, '0');
@@ -139,7 +138,7 @@ void MainWindow::updateSubtitleStart()
 
 void MainWindow::updateSubtitleEnd()
 {
-    if(!ui->tblSubtitlesView->selectionModel()->hasSelection()) return;
+    if (!isAnyRowSelected()) return;
 
     QString newSubtitleEnd;
     auto endHours = QString::number(ui->sbEndHours->value()).rightJustified(2, '0');
@@ -177,17 +176,17 @@ void MainWindow::on_actionSave_As_triggered()
 
 void MainWindow::on_txtSubtitleEdit_textChanged()
 {
-    if (ui->tblSubtitlesView->selectionModel()->hasSelection())
-    {
-        auto newContent = ui->txtSubtitleEdit->toPlainText();
+    if (!isAnyRowSelected()) return;
 
-        auto modelIndex = ui->tblSubtitlesView->selectionModel()->currentIndex();
-        if(!modelIndex.isValid()) return;
+    auto newContent = ui->txtSubtitleEdit->toPlainText();
 
-        m_model.item(modelIndex.row(), 2)->setText(newContent);
+    auto modelIndex = ui->tblSubtitlesView->selectionModel()->currentIndex();
+    if(!modelIndex.isValid()) return;
 
-        ui->txtSubtitlePreview->setHtml(newContent.replace('\n', "<br />"));
-    }
+    auto selectedItem = m_model.item(modelIndex.row(), 2);
+    selectedItem->setText(newContent);
+
+    ui->txtSubtitlePreview->setHtml(newContent.replace('\n', "<br />"));
 }
 
 void MainWindow::newFile()
@@ -201,6 +200,7 @@ void MainWindow::newFile()
 
     m_model.removeRows(0, m_model.rowCount());
     clearAllInputs();
+    emit on_actionAdd_Row_triggered();
 }
 
 void MainWindow::openFile()
@@ -223,7 +223,7 @@ void MainWindow::openFile()
     }
 
     QFile file(path);
-    if(!file.open(QIODevice::ReadOnly))
+    if (!file.open(QIODevice::ReadOnly))
     {
         QMessageBox::critical(this, "Error", file.errorString());
         return;
@@ -235,7 +235,7 @@ void MainWindow::openFile()
 
     bool readAtLeastOneCorrectSubtitle = false;
 
-    while(!stream.atEnd())
+    while (!stream.atEnd())
     {
         auto line = stream.readLine();
 
@@ -283,7 +283,7 @@ void MainWindow::openFile()
         readAtLeastOneCorrectSubtitle = true;
     }
 
-    if(!readAtLeastOneCorrectSubtitle)
+    if (!readAtLeastOneCorrectSubtitle)
     {
         QMessageBox::critical(this, "Error", "Could not read that file properly.");
         return;
@@ -378,26 +378,26 @@ void MainWindow::on_actionUnderline_triggered()
 void MainWindow::surroundSelectedTextWithElement(const QString& atStart, const QString& atEnd)
 {
     auto textCursor = ui->txtSubtitleEdit->textCursor();
-    int position = textCursor.position();
-    auto selectionStart = textCursor.selectionStart();
-    auto selectionEnd = textCursor.selectionEnd();
+    int selectionStart = textCursor.selectionStart();
+    auto selectedText = textCursor.selectedText();
 
-    auto newSubtitleContent = ui->txtSubtitleEdit->toPlainText();
-    newSubtitleContent.insert(selectionEnd, QString(atStart));
-    newSubtitleContent.insert(selectionStart, QString(atEnd));
-    ui->txtSubtitleEdit->setPlainText(newSubtitleContent);
-
-    textCursor.setPosition(position, QTextCursor::MoveMode::KeepAnchor);
-    textCursor.clearSelection();
-    ui->txtSubtitleEdit->setTextCursor(textCursor);
+    ui->txtSubtitleEdit->textCursor().setPosition(selectionStart);
+    ui->txtSubtitleEdit->textCursor().insertText(atStart);
+    ui->txtSubtitleEdit->textCursor().insertText(selectedText);
+    ui->txtSubtitleEdit->textCursor().insertText(atEnd);
 }
 
 void MainWindow::selectRow(int rowNumber)
 {
     ui->tblSubtitlesView->selectRow(rowNumber);
     auto modelIndex = ui->tblSubtitlesView->currentIndex();
+    if(!modelIndex.isValid()) return;
     emit ui->tblSubtitlesView->clicked(modelIndex);
+}
 
+bool MainWindow::isAnyRowSelected()
+{
+    return ui->tblSubtitlesView->selectionModel()->hasSelection();
 }
 
 void MainWindow::itemChanged(QStandardItem *item)
@@ -439,7 +439,7 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionAdd_Row_triggered()
 {
     int rowIndex = 0;
-    if(ui->tblSubtitlesView->selectionModel()->hasSelection())
+    if (isAnyRowSelected())
     {
         auto currentIndex = ui->tblSubtitlesView->currentIndex();
         rowIndex = currentIndex.row() + 1;
@@ -463,64 +463,60 @@ void MainWindow::on_actionEdit_Row_triggered()
     ui->txtSubtitleEdit->setFocus();
 }
 
-
 void MainWindow::on_actionDelete_Row_triggered()
 {
-    if(!ui->tblSubtitlesView->selectionModel()->hasSelection()) return;
+    if (m_model.rowCount() <= 1)
+    {
+        QMessageBox::information(this, "Can't do that", "Can't delete the only row left.");
+        return;
+    }
+
+    if (!isAnyRowSelected()) return;
 
     auto currentIndex = ui->tblSubtitlesView->currentIndex();
     m_model.removeRows(currentIndex.row(), 1);
     ui->tblSubtitlesView->selectRow(currentIndex.row() - 1);
 }
 
-
 void MainWindow::on_sbStartMilliseconds_valueChanged(int arg1)
 {
     updateSubtitleStart();
 }
-
 
 void MainWindow::on_sbStartSeconds_valueChanged(int arg1)
 {
     updateSubtitleStart();
 }
 
-
 void MainWindow::on_sbStartMinutes_valueChanged(int arg1)
 {
     updateSubtitleStart();
 }
-
 
 void MainWindow::on_sbStartHours_valueChanged(int arg1)
 {
     updateSubtitleStart();
 }
 
-
 void MainWindow::on_sbEndMilliseconds_valueChanged(int arg1)
 {
     updateSubtitleEnd();
 }
-
 
 void MainWindow::on_sbEndSeconds_valueChanged(int arg1)
 {
     updateSubtitleEnd();
 }
 
-
 void MainWindow::on_sbEndMinutes_valueChanged(int arg1)
 {
     updateSubtitleEnd();
 }
 
-
 void MainWindow::on_sbEndHours_valueChanged(int arg1)
 {
     updateSubtitleEnd();
 }
-
 
 void MainWindow::on_actionZoom_in_triggered()
 {
@@ -543,17 +539,6 @@ void MainWindow::on_actionFind_triggered()
     FindDialog* findDialog = new FindDialog(this);
 
     findDialog->show();
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    checkSave();
-    event->accept();
-}
-
-void MainWindow::on_actionExit_triggered()
-{
-    close();
 }
 
 void MainWindow::on_actionFirst_Row_triggered()
@@ -585,5 +570,36 @@ void MainWindow::on_actionExact_Row_triggered()
     GoToDialog* goToDialog = new GoToDialog(this);
 
     goToDialog->show();
+}
+
+void MainWindow::on_actionColor_triggered()
+{
+    if (!ui->txtSubtitleEdit->textCursor().hasSelection())
+    {
+        QMessageBox::information(this, "Can't do that", "Please select the part of the subtitle you want to color.");
+        return;
+    }
+
+    auto color = QColorDialog::getColor(Qt::white, this, "Choose a color");
+
+    if (!color.isValid()) return;
+
+    surroundSelectedTextWithElement(QString("<font color=\"%0\">").arg(color.name()), QString("</font>"));
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    checkSave();
+    event->accept();
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    close();
+}
+
+void MainWindow::on_txtSubtitleEdit_modificationChanged(bool arg1)
+{
+
 }
 

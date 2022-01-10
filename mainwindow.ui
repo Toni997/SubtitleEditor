@@ -141,7 +141,7 @@
              </size>
             </property>
             <property name="maximum">
-             <number>60</number>
+             <number>59</number>
             </property>
            </widget>
           </item>
@@ -173,7 +173,7 @@
           <item row="2" column="2">
            <widget class="QSpinBox" name="sbEndMinutes">
             <property name="maximum">
-             <number>60</number>
+             <number>59</number>
             </property>
            </widget>
           </item>
@@ -202,7 +202,7 @@
           <item row="2" column="3">
            <widget class="QSpinBox" name="sbEndSeconds">
             <property name="maximum">
-             <number>60</number>
+             <number>59</number>
             </property>
            </widget>
           </item>
@@ -221,7 +221,7 @@
              </size>
             </property>
             <property name="maximum">
-             <number>60</number>
+             <number>59</number>
             </property>
            </widget>
           </item>
@@ -404,6 +404,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionItalic"/>
     <addaction name="actionUnderline"/>
     <addaction name="separator"/>
+    <addaction name="actionColor"/>
+    <addaction name="separator"/>
     <addaction name="actionFind"/>
     <addaction name="menuGo_To"/>
    </widget>
@@ -446,8 +448,10 @@ p, li { white-space: pre-wrap; }
    <addaction name="actionItalic"/>
    <addaction name="actionUnderline"/>
    <addaction name="separator"/>
-   <addaction name="actionZoom_out"/>
+   <addaction name="actionColor"/>
+   <addaction name="separator"/>
    <addaction name="actionZoom_in"/>
+   <addaction name="actionZoom_out"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -652,7 +656,29 @@ p, li { white-space: pre-wrap; }
     <string>Ctrl+3</string>
    </property>
   </action>
+  <action name="actionColor">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-text-color-32.png</normaloff>:/icons/icons/icons8-text-color-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Color</string>
+   </property>
+  </action>
  </widget>
+ <tabstops>
+  <tabstop>tblSubtitlesView</tabstop>
+  <tabstop>txtSubtitleEdit</tabstop>
+  <tabstop>sbStartHours</tabstop>
+  <tabstop>sbStartMinutes</tabstop>
+  <tabstop>sbStartSeconds</tabstop>
+  <tabstop>sbStartMilliseconds</tabstop>
+  <tabstop>sbEndHours</tabstop>
+  <tabstop>sbEndMinutes</tabstop>
+  <tabstop>sbEndSeconds</tabstop>
+  <tabstop>sbEndMilliseconds</tabstop>
+  <tabstop>txtSubtitlePreview</tabstop>
+ </tabstops>
  <resources>
   <include location="resources.qrc"/>
  </resources>
