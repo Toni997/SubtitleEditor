@@ -34,5 +34,6 @@ void GoToDialog::on_btnGoTo_clicked()
         return;
     }
     emit goToRowCalled(input.toInt() - 1);
+    close();
 }
 

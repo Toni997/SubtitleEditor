@@ -1,7 +1,7 @@
 #ifndef DIRECTION_H
 #define DIRECTION_H
 
-enum EDirection {
+enum class EDirection {
     Down = 0,
     Up = 1
 };

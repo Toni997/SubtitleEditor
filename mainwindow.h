@@ -9,11 +9,13 @@
 #include <QFileDialog>
 #include <QFile>
 #include <QColorDialog>
+#include <QFontDialog>
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QRegularExpression>
+#include <QMimeData>
 #include "direction.h"
 #include "aboutdialog.h"
 #include "finddialog.h"
@@ -63,6 +65,7 @@ private slots:
     void on_sbEndSeconds_valueChanged(int arg1);
     void on_sbEndMinutes_valueChanged(int arg1);
     void on_sbEndHours_valueChanged(int arg1);
+
     void on_actionZoom_in_triggered();
     void on_actionZoom_out_triggered();
 
@@ -73,8 +76,15 @@ private slots:
     void on_actionExact_Row_triggered();
 
     void on_actionColor_triggered();
+    void on_actionFont_triggered();
 
-    void on_txtSubtitleEdit_modificationChanged(bool arg1);
+    void on_actionCopy_triggered();
+    void on_actionPaste_triggered();
+    void on_actionCut_triggered();
+    void on_actionUndo_triggered();
+    void on_actionSelect_All_triggered();
+
+    void on_actionSelect_None_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -97,9 +107,11 @@ private:
     void surroundSelectedTextWithElement(const QString& atStart, const QString& atEnd);
     void selectRow(int rowNumber);
     bool isAnyRowSelected();
+    bool anySpinBoxHasFocus();
+    void clearFocusOnEverySpinBox();
 
     void newFile();
-    void openFile();
+    void openFile(QString path = QString());
     void saveFile(QString path);
     void saveFileAs();
     void checkSave();
@@ -107,5 +119,10 @@ private:
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event);
+
+    // QWidget interface
+protected:
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
 };
 #endif // MAINWINDOW_H

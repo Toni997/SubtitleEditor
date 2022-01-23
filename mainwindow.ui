@@ -10,6 +10,9 @@
     <height>815</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -335,6 +338,9 @@
           <property name="cursor" stdset="0">
            <cursorShape>ForbiddenCursor</cursorShape>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -383,6 +389,8 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionZoom_in"/>
     <addaction name="actionZoom_out"/>
+    <addaction name="separator"/>
+    <addaction name="actionFont"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -396,6 +404,13 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionLast_Row"/>
      <addaction name="actionExact_Row"/>
     </widget>
+    <addaction name="actionUndo"/>
+    <addaction name="actionCut"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
+    <addaction name="actionSelect_All"/>
+    <addaction name="actionSelect_None"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Row"/>
     <addaction name="actionEdit_Row"/>
     <addaction name="actionDelete_Row"/>
@@ -435,6 +450,13 @@ p, li { white-space: pre-wrap; }
    <addaction name="actionOpen"/>
    <addaction name="actionSave"/>
    <addaction name="actionSave_As"/>
+   <addaction name="separator"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionCut"/>
+   <addaction name="actionCopy"/>
+   <addaction name="actionPaste"/>
+   <addaction name="actionSelect_All"/>
+   <addaction name="actionSelect_None"/>
    <addaction name="separator"/>
    <addaction name="actionAdd_Row"/>
    <addaction name="actionEdit_Row"/>
@@ -663,6 +685,69 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Color</string>
+   </property>
+  </action>
+  <action name="actionFont">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-text-32.png</normaloff>:/icons/icons/icons8-text-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Font</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-copy-32.png</normaloff>:/icons/icons/icons8-copy-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-paste-32.png</normaloff>:/icons/icons/icons8-paste-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-cut-32.png</normaloff>:/icons/icons/icons8-cut-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cut</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-undo-32.png</normaloff>:/icons/icons/icons8-undo-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionSelect_All">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-select-all-32.png</normaloff>:/icons/icons/icons8-select-all-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select All</string>
+   </property>
+  </action>
+  <action name="actionSelect_None">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/icons8-select-none-32.png</normaloff>:/icons/icons/icons8-select-none-32.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select None</string>
    </property>
   </action>
  </widget>

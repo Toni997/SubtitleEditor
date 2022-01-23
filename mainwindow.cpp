@@ -12,8 +12,6 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(QIcon(":/icons/icons/app.ico"));
     setWindowTitle(QCoreApplication::applicationName());
 
-    ui->toolBar->setFloatable(true);
-
     init();
 }
 
@@ -35,7 +33,7 @@ void MainWindow::init()
 
     ui->tblSubtitlesView->setModel(&m_model);
 
-    connect(&m_model, &QStandardItemModel::itemChanged, this, &MainWindow::itemChanged);
+    connect(&m_model, &QStandardItemModel::itemChanged, this, this->itemChanged);
 
     newFile();
 }
@@ -122,7 +120,7 @@ void MainWindow::clearAllInputs()
 
 void MainWindow::updateSubtitleStart()
 {
-    if (!isAnyRowSelected()) return;
+    if (!isAnyRowSelected() || !anySpinBoxHasFocus()) return;
 
     QString newSubtitleStart;
     auto startHours = QString::number(ui->sbStartHours->value()).rightJustified(2, '0');
@@ -138,7 +136,7 @@ void MainWindow::updateSubtitleStart()
 
 void MainWindow::updateSubtitleEnd()
 {
-    if (!isAnyRowSelected()) return;
+    if (!isAnyRowSelected() || !anySpinBoxHasFocus()) return;
 
     QString newSubtitleEnd;
     auto endHours = QString::number(ui->sbEndHours->value()).rightJustified(2, '0');
@@ -176,7 +174,7 @@ void MainWindow::on_actionSave_As_triggered()
 
 void MainWindow::on_txtSubtitleEdit_textChanged()
 {
-    if (!isAnyRowSelected()) return;
+    if (!isAnyRowSelected() || !ui->txtSubtitleEdit->hasFocus()) return;
 
     auto newContent = ui->txtSubtitleEdit->toPlainText();
 
@@ -194,19 +192,24 @@ void MainWindow::newFile()
     ui->txtSubtitleEdit->clear();
     ui->txtSubtitlePreview->clear();
     ui->statusbar->showMessage("New File");
-    setWindowTitle(APP_NAME);
-    m_path.clear();
-    m_changed = false;
+
 
     m_model.removeRows(0, m_model.rowCount());
     clearAllInputs();
-    emit on_actionAdd_Row_triggered();
+    on_actionAdd_Row_triggered();
+
+    setWindowTitle(APP_NAME);
+    m_path.clear();
+    m_changed = false;
 }
 
-void MainWindow::openFile()
+void MainWindow::openFile(QString path)
 {
-    QString path = QFileDialog::getOpenFileName(this, "Open Subtitle", "", "*.srt");
-    if (path.isEmpty()) return;
+    if (path.isEmpty())
+    {
+        path = QFileDialog::getOpenFileName(this, "Open Subtitle", "", "*.srt");
+        if (path.isEmpty()) return;
+    }
 
     QFileInfo fileInfo(path);
 
@@ -230,6 +233,8 @@ void MainWindow::openFile()
     }
 
     QTextStream stream(&file);
+
+    stream.setAutoDetectUnicode(true);
 
     m_model.removeRows(0, m_model.rowCount());
 
@@ -400,6 +405,33 @@ bool MainWindow::isAnyRowSelected()
     return ui->tblSubtitlesView->selectionModel()->hasSelection();
 }
 
+bool MainWindow::anySpinBoxHasFocus()
+{
+    return
+        (
+            ui->sbStartHours->hasFocus() ||
+            ui->sbStartMinutes->hasFocus() ||
+            ui->sbStartSeconds->hasFocus() ||
+            ui->sbStartMilliseconds->hasFocus() ||
+            ui->sbEndHours->hasFocus() ||
+            ui->sbEndMinutes->hasFocus() ||
+            ui->sbEndSeconds->hasFocus() ||
+            ui->sbEndMilliseconds->hasFocus()
+        );
+}
+
+void MainWindow::clearFocusOnEverySpinBox()
+{
+    ui->sbStartHours->clearFocus();
+    ui->sbStartMinutes->clearFocus();
+    ui->sbStartSeconds->clearFocus();
+    ui->sbStartMilliseconds->clearFocus();
+    ui->sbEndHours->clearFocus();
+    ui->sbEndMinutes->clearFocus();
+    ui->sbEndSeconds->clearFocus();
+    ui->sbEndMilliseconds->clearFocus();
+}
+
 void MainWindow::itemChanged(QStandardItem *item)
 {
     m_changed = true;
@@ -416,6 +448,7 @@ void MainWindow::on_tblSubtitlesView_clicked(const QModelIndex &index)
     auto subtitleStart = itemSubtitleStart->text();
     auto subtitleEnd = itemSubtitleEnd->text();
 
+    clearFocusOnEverySpinBox();
     ui->sbStartHours->setValue(subtitleStart.left(2).toInt());
     ui->sbStartMinutes->setValue(subtitleStart.mid(3, 2).toInt());
     ui->sbStartSeconds->setValue(subtitleStart.mid(6, 2).toInt());
@@ -426,6 +459,7 @@ void MainWindow::on_tblSubtitlesView_clicked(const QModelIndex &index)
     ui->sbEndSeconds->setValue(subtitleEnd.mid(6, 2).toInt());
     ui->sbEndMilliseconds->setValue(subtitleEnd.right(3).toInt());
 
+    ui->txtSubtitleEdit->clearFocus();
     ui->txtSubtitleEdit->setPlainText(itemContent->text());
     ui->txtSubtitlePreview->setHtml(itemContent->text().replace('\n', "<br />"));
 }
@@ -476,6 +510,8 @@ void MainWindow::on_actionDelete_Row_triggered()
     auto currentIndex = ui->tblSubtitlesView->currentIndex();
     m_model.removeRows(currentIndex.row(), 1);
     ui->tblSubtitlesView->selectRow(currentIndex.row() - 1);
+    auto item = m_model.item(currentIndex.row(), 2);
+    emit m_model.itemChanged(item);
 }
 
 void MainWindow::on_sbStartMilliseconds_valueChanged(int arg1)
@@ -593,13 +629,67 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+    {
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    auto mimeData = event->mimeData();
+    auto path = mimeData->urls().at(0).toLocalFile();
+    checkSave();
+    openFile(path);
+}
+
 void MainWindow::on_actionExit_triggered()
 {
     close();
 }
 
-void MainWindow::on_txtSubtitleEdit_modificationChanged(bool arg1)
+void MainWindow::on_actionFont_triggered()
 {
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, ui->txtSubtitleEdit->font(), this);
 
+    if(!ok) return;
+
+    ui->txtSubtitleEdit->setFont(font);
+    ui->txtSubtitlePreview->setFont(font);
+}
+
+void MainWindow::on_actionCopy_triggered()
+{
+    ui->txtSubtitleEdit->copy();
+}
+
+void MainWindow::on_actionPaste_triggered()
+{
+    ui->txtSubtitleEdit->paste();
+}
+
+void MainWindow::on_actionCut_triggered()
+{
+    ui->txtSubtitleEdit->cut();
+}
+
+void MainWindow::on_actionUndo_triggered()
+{
+    ui->txtSubtitleEdit->undo();
+}
+
+void MainWindow::on_actionSelect_All_triggered()
+{
+    ui->txtSubtitleEdit->selectAll();
+}
+
+void MainWindow::on_actionSelect_None_triggered()
+{
+    auto textCursor = ui->txtSubtitleEdit->textCursor();
+    textCursor.clearSelection();
+    ui->txtSubtitleEdit->setTextCursor(textCursor);
 }
 

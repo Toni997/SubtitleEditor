@@ -20,5 +20,12 @@
         <file>icons/icons8-go-to-start-32.png</file>
         <file>icons/icons8-running-32.png</file>
         <file>icons/icons8-text-color-32.png</file>
+        <file>icons/icons8-text-32.png</file>
+        <file>icons/icons8-copy-32.png</file>
+        <file>icons/icons8-cut-32.png</file>
+        <file>icons/icons8-paste-32.png</file>
+        <file>icons/icons8-undo-32.png</file>
+        <file>icons/icons8-select-all-32.png</file>
+        <file>icons/icons8-select-none-32.png</file>
     </qresource>
 </RCC>
